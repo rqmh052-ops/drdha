@@ -1,0 +1,27 @@
+{
+  "name": "NEXUS Chat",
+  "short_name": "NEXUS",
+  "description": "تطبيق مراسلة آمن ومشفّر - محادثات خاصة، مجموعات، وقنوات",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0e1621",
+  "theme_color": "#0e1621",
+  "dir": "rtl",
+  "lang": "ar",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='40' fill='%230BBCE8'/%3E%3Ctext x='96' y='128' font-size='90' text-anchor='middle' fill='white'%3E%F0%9F%92%AC%3C/text%3E%3C/svg%3E",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='100' fill='%230BBCE8'/%3E%3Ctext x='256' y='340' font-size='240' text-anchor='middle' fill='white'%3E%F0%9F%92%AC%3C/text%3E%3C/svg%3E",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
