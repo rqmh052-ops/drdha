@@ -1,0 +1,1181 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXUS — Secure Chat</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg-0:#060A12;--bg-1:#090E1C;--bg-2:#0D1425;--bg-3:#121D33;--bg-4:#19263D;--bg-5:#1F304A;
+  --c-cyan:#0BBCE8;--c-cyan-a:rgba(11,188,232,.12);--c-violet:#7434EB;
+  --c-green:#13D87C;--c-red:#EF4444;--c-amber:#F59E0B;
+  --t-1:#DDE4F0;--t-2:#8A9BB5;--t-3:#5A6E88;--t-m:#374D66;
+  --border:rgba(255,255,255,.04);--border-em:rgba(255,255,255,.08);
+  --sw:272px;--mw:230px;
+  --fu:'Outfit',sans-serif;--fb:'Inter',sans-serif;--fm:'JetBrains Mono',monospace;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;overflow:hidden;}
+body{background:var(--bg-0);color:var(--t-1);font-family:var(--fb);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;}
+button{cursor:pointer;border:none;background:none;color:inherit;font:inherit;}
+input,textarea,select{font:inherit;color:inherit;border:none;outline:none;background:none;}
+::-webkit-scrollbar{width:3px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.07);border-radius:2px;}
+.hidden{display:none !important;}
+
+/* ══ AUTH ══════════════════════════════════════════════════════ */
+#auth-page{
+  height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;
+  background:var(--bg-0);
+  background-image:
+    radial-gradient(circle at 18% 55%,rgba(11,188,232,.08) 0%,transparent 52%),
+    radial-gradient(circle at 82% 45%,rgba(116,52,235,.08) 0%,transparent 52%);
+}
+.auth-card{
+  width:100%;max-width:420px;background:var(--bg-2);border:1px solid var(--border-em);
+  border-radius:18px;padding:46px 44px;box-shadow:0 32px 96px rgba(0,0,0,.65);
+}
+.auth-logo{display:flex;align-items:center;gap:12px;margin-bottom:6px;}
+.auth-logo-icon{
+  width:42px;height:42px;background:linear-gradient(135deg,var(--c-cyan),var(--c-violet));
+  border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;
+}
+.auth-logo-name{
+  font-family:var(--fu);font-size:28px;font-weight:700;letter-spacing:.07em;
+  background:linear-gradient(90deg,var(--c-cyan),var(--c-violet));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.auth-tagline{color:var(--t-3);font-size:12px;margin-bottom:30px;padding-left:54px;}
+.auth-tabs{
+  display:flex;gap:4px;background:var(--bg-3);border-radius:8px;padding:4px;margin-bottom:22px;
+}
+.a-tab{
+  flex:1;padding:8px;border-radius:6px;font-size:13px;font-weight:500;font-family:var(--fu);
+  color:var(--t-2);text-align:center;transition:all .15s;
+}
+.a-tab.on{background:var(--bg-4);color:var(--t-1);}
+.auth-fields{display:flex;flex-direction:column;gap:10px;margin-bottom:16px;}
+.a-inp{
+  background:var(--bg-3);border:1px solid var(--border);border-radius:8px;
+  padding:12px 14px;font-size:14px;color:var(--t-1);direction:ltr;
+  transition:border-color .15s,box-shadow .15s;
+}
+.a-inp::placeholder{color:var(--t-m);}
+.a-inp:focus{border-color:rgba(11,188,232,.5);box-shadow:0 0 0 3px rgba(11,188,232,.09);}
+.a-submit{
+  width:100%;background:linear-gradient(135deg,var(--c-cyan),var(--c-violet));
+  color:white;padding:12px;border-radius:8px;font-size:14px;font-weight:600;
+  font-family:var(--fu);transition:opacity .15s,transform .1s;letter-spacing:.02em;
+}
+.a-submit:hover{opacity:.9;}
+.a-submit:active{transform:scale(.98);}
+.a-err{
+  background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:6px;
+  padding:10px 12px;font-size:12px;color:#FCA5A5;margin-top:10px;display:none;
+}
+.a-badge{
+  margin-top:22px;padding:10px 14px;background:rgba(19,216,124,.06);
+  border:1px solid rgba(19,216,124,.15);border-radius:8px;
+  font-size:10px;font-family:var(--fm);color:var(--c-green);
+  display:flex;align-items:center;gap:8px;
+}
+
+/* ══ APP LAYOUT ════════════════════════════════════════════════ */
+#app-page{display:flex;height:100vh;overflow:hidden;}
+
+/* ── Sidebar ─────────────────────────────────────────────────── */
+.sidebar{
+  width:var(--sw);flex-shrink:0;background:var(--bg-1);
+  border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;
+}
+.sb-hd{
+  padding:13px 12px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.brand{display:flex;align-items:center;gap:8px;}
+.brand-ico{
+  width:27px;height:27px;border-radius:7px;
+  background:linear-gradient(135deg,var(--c-cyan),var(--c-violet));
+  display:flex;align-items:center;justify-content:center;font-size:13px;
+}
+.brand-nm{font-family:var(--fu);font-size:15px;font-weight:700;letter-spacing:.06em;color:var(--t-1);}
+.sb-enc{
+  font-family:var(--fm);font-size:9px;color:var(--c-green);
+  background:rgba(19,216,124,.07);border:1px solid rgba(19,216,124,.15);
+  border-radius:10px;padding:2px 8px;
+}
+.sb-user{
+  padding:9px 12px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:8px;
+}
+.u-av{
+  width:30px;height:30px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-weight:700;font-size:11px;font-family:var(--fu);color:white;position:relative;
+}
+.u-av::after{
+  content:'';position:absolute;bottom:0;right:0;
+  width:8px;height:8px;background:var(--c-green);
+  border-radius:50%;border:2px solid var(--bg-1);
+}
+.u-nm{
+  flex:1;font-size:13px;font-weight:600;font-family:var(--fu);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--t-1);
+}
+.sb-logout{
+  color:var(--t-m);font-size:14px;padding:4px;border-radius:4px;
+  transition:color .15s,background .15s;flex-shrink:0;
+}
+.sb-logout:hover{color:var(--c-red);background:rgba(239,68,68,.08);}
+.sb-search{padding:8px 10px 5px;}
+.s-box{
+  background:var(--bg-3);border:1px solid var(--border);border-radius:7px;
+  padding:7px 11px;display:flex;align-items:center;gap:7px;
+}
+.s-box input{flex:1;font-size:12px;color:var(--t-1);}
+.s-box input::placeholder{color:var(--t-m);}
+.rooms-list{flex:1;overflow-y:auto;padding:5px 0;}
+.sec-lbl{
+  padding:10px 14px 5px;font-size:10px;font-weight:700;font-family:var(--fu);
+  letter-spacing:.1em;text-transform:uppercase;color:var(--t-m);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.lbl-btn{
+  width:20px;height:20px;border-radius:4px;background:var(--bg-3);color:var(--t-2);
+  font-size:16px;line-height:1;display:flex;align-items:center;justify-content:center;
+  transition:background .15s,color .15s;
+}
+.lbl-btn:hover{background:var(--bg-4);color:var(--t-1);}
+.room-item{
+  display:flex;align-items:center;gap:8px;padding:7px 14px;
+  cursor:pointer;transition:background .1s;position:relative;user-select:none;
+}
+.room-item::before{
+  content:'';position:absolute;left:0;top:5px;bottom:5px;
+  width:3px;border-radius:0 2px 2px 0;background:transparent;transition:background .15s;
+}
+.room-item:hover{background:rgba(255,255,255,.025);}
+.room-item.on{background:rgba(11,188,232,.07);}
+.room-item.on::before{background:var(--c-cyan);}
+.r-ico{font-size:15px;width:20px;text-align:center;flex-shrink:0;}
+.r-meta{flex:1;min-width:0;}
+.r-nm{
+  font-size:13px;font-weight:500;font-family:var(--fu);color:var(--t-2);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .1s;
+}
+.room-item.on .r-nm,.room-item:hover .r-nm{color:var(--t-1);}
+.r-prev{font-size:11px;color:var(--t-m);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;}
+.r-lock{font-size:10px;color:var(--t-m);flex-shrink:0;}
+.sb-foot{padding:8px 10px 12px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:4px;}
+.sb-btn{
+  display:flex;align-items:center;gap:7px;padding:7px 11px;border-radius:7px;
+  font-size:12px;font-weight:500;font-family:var(--fu);color:var(--t-2);
+  transition:background .15s,color .15s;width:100%;
+}
+.sb-btn:hover{background:var(--bg-3);color:var(--t-1);}
+
+/* ── Main ─────────────────────────────────────────────────────── */
+.chat-area{flex:1;background:var(--bg-0);display:flex;flex-direction:column;overflow:hidden;min-width:0;}
+.no-room-scr{
+  flex:1;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:12px;color:var(--t-m);user-select:none;
+}
+.nr-icon{
+  width:68px;height:68px;background:var(--bg-2);border-radius:18px;
+  display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:4px;
+}
+.nr-title{font-family:var(--fu);font-size:17px;font-weight:600;color:var(--t-3);}
+.nr-sub{font-size:12px;color:var(--t-m);}
+#chat-view{display:flex;flex-direction:column;height:100%;overflow:hidden;}
+.ch-hd{
+  height:54px;padding:0 18px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;flex-shrink:0;
+  background:rgba(9,14,28,.85);backdrop-filter:blur(10px);z-index:10;
+}
+.ch-left{display:flex;align-items:center;gap:10px;}
+.ch-emoji{font-size:19px;width:30px;text-align:center;}
+.ch-nm{font-family:var(--fu);font-size:14px;font-weight:600;color:var(--t-1);}
+.ch-ds{font-size:11px;color:var(--t-m);margin-top:1px;}
+.ch-right{display:flex;align-items:center;gap:8px;}
+.enc-chip{
+  display:flex;align-items:center;gap:5px;
+  background:rgba(19,216,124,.07);border:1px solid rgba(19,216,124,.18);
+  border-radius:20px;padding:3px 10px;font-family:var(--fm);font-size:9.5px;color:var(--c-green);
+  animation:ep 3s ease-in-out infinite;
+}
+@keyframes ep{0%,100%{opacity:.7}50%{opacity:1}}
+.mem-chip{
+  display:flex;align-items:center;gap:4px;font-size:12px;color:var(--t-3);
+  padding:4px 8px;border-radius:6px;background:var(--bg-3);cursor:pointer;
+  transition:background .15s,color .15s;border:1px solid var(--border);
+}
+.mem-chip:hover{background:var(--bg-4);color:var(--t-1);}
+.msgs-scroll{flex:1;overflow-y:auto;padding:14px 0 6px;}
+#messages{display:flex;flex-direction:column;}
+.date-div{
+  display:flex;align-items:center;gap:10px;padding:10px 18px;
+  color:var(--t-m);font-size:10px;font-family:var(--fm);
+}
+.date-div::before,.date-div::after{content:'';flex:1;height:1px;background:var(--border);}
+.msg-group{display:flex;gap:10px;padding:2px 18px;transition:background .1s;position:relative;}
+.msg-group:hover{background:rgba(255,255,255,.008);}
+.msg-group.has-hd{padding-top:10px;}
+.msg-group.cont{padding-top:1px;}
+.msg-group.cont .m-av{visibility:hidden;}
+.msg-group.cont .m-hd{display:none;}
+.m-av{
+  width:34px;height:34px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-weight:700;font-size:12px;font-family:var(--fu);color:white;margin-top:2px;
+}
+.m-body{flex:1;min-width:0;}
+.m-hd{display:flex;align-items:baseline;gap:7px;margin-bottom:3px;}
+.m-un{font-family:var(--fu);font-size:13px;font-weight:600;}
+.m-ts{font-family:var(--fm);font-size:10px;color:var(--t-m);}
+.m-txt{font-size:14px;line-height:1.55;color:var(--t-1);word-break:break-word;direction:auto;unicode-bidi:plaintext;}
+.m-enc{font-family:var(--fm);font-size:9px;color:var(--t-m);margin-top:2px;opacity:.4;user-select:none;}
+.m-reply-ref{
+  background:var(--bg-3);border-left:3px solid var(--c-cyan);
+  border-radius:0 5px 5px 0;padding:5px 10px;margin-bottom:5px;
+  font-size:12px;color:var(--t-2);cursor:pointer;
+}
+@keyframes msg-in{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.msg-new{animation:msg-in .18s ease-out;}
+.msg-group .msg-actions{
+  position:absolute;right:18px;top:50%;transform:translateY(-50%);
+  display:none;gap:4px;
+}
+.msg-group:hover .msg-actions{display:flex;}
+.msg-act-btn{
+  width:26px;height:26px;border-radius:5px;background:var(--bg-4);
+  border:1px solid var(--border-em);font-size:13px;
+  display:flex;align-items:center;justify-content:center;
+  transition:background .1s,color .1s;color:var(--t-2);
+}
+.msg-act-btn:hover{background:var(--bg-5);color:var(--t-1);}
+#typing-bar{
+  min-height:22px;padding:3px 18px;font-size:11px;color:var(--t-m);
+  display:flex;align-items:center;gap:7px;font-family:var(--fu);
+}
+.t-dots{display:flex;gap:3px;}
+.t-dot{width:4px;height:4px;border-radius:50%;background:var(--t-m);}
+.t-dot:nth-child(1){animation:td 1.2s 0s infinite}
+.t-dot:nth-child(2){animation:td 1.2s .2s infinite}
+.t-dot:nth-child(3){animation:td 1.2s .4s infinite}
+@keyframes td{0%,100%{transform:translateY(0);opacity:.4}40%{transform:translateY(-4px);opacity:1}}
+.input-area{padding:9px 14px 13px;background:var(--bg-1);border-top:1px solid var(--border);flex-shrink:0;position:relative;}
+.enc-strip{
+  height:2px;border-radius:2px;margin-bottom:7px;opacity:.4;
+  background:linear-gradient(90deg,var(--c-cyan),var(--c-violet),var(--c-cyan));
+  background-size:200% 100%;animation:strip 3s linear infinite;
+}
+@keyframes strip{0%{background-position:0% 0%}100%{background-position:200% 0%}}
+.input-box{
+  background:var(--bg-3);border:1px solid var(--border-em);border-radius:10px;
+  display:flex;align-items:flex-end;gap:7px;padding:7px 11px;
+  transition:border-color .2s,box-shadow .2s;
+}
+.input-box:focus-within{border-color:rgba(11,188,232,.35);box-shadow:0 0 0 3px rgba(11,188,232,.07);}
+.reply-preview{
+  background:var(--bg-4);border-left:3px solid var(--c-cyan);border-radius:0 6px 6px 0;
+  padding:7px 10px;margin-bottom:7px;display:flex;align-items:center;justify-content:space-between;
+  font-size:12px;color:var(--t-2);
+}
+.reply-preview button{color:var(--t-m);font-size:16px;transition:color .1s;}
+.reply-preview button:hover{color:var(--t-1);}
+#msg-input{
+  flex:1;max-height:120px;min-height:20px;font-size:14px;font-family:var(--fb);
+  color:var(--t-1);resize:none;line-height:1.5;overflow-y:auto;direction:auto;
+}
+#msg-input::placeholder{color:var(--t-m);}
+.inp-btn{
+  width:32px;height:32px;border-radius:7px;display:flex;align-items:center;
+  justify-content:center;font-size:16px;color:var(--t-3);flex-shrink:0;
+  transition:background .15s,color .15s;
+}
+.inp-btn:hover{background:var(--bg-4);color:var(--t-1);}
+.send-btn{
+  width:32px;height:32px;border-radius:7px;flex-shrink:0;
+  background:linear-gradient(135deg,var(--c-cyan),var(--c-violet));
+  display:flex;align-items:center;justify-content:center;
+  transition:opacity .15s,transform .1s;
+}
+.send-btn:hover{opacity:.9;}
+.send-btn:active{transform:scale(.93);}
+.emoji-picker{
+  position:absolute;bottom:75px;left:14px;
+  background:var(--bg-4);border:1px solid var(--border-em);
+  border-radius:10px;padding:8px;display:grid;grid-template-columns:repeat(8,1fr);gap:3px;
+  box-shadow:0 12px 40px rgba(0,0,0,.5);z-index:100;
+}
+.emoji-picker button{
+  width:30px;height:30px;font-size:17px;border-radius:5px;
+  transition:background .1s;display:flex;align-items:center;justify-content:center;
+}
+.emoji-picker button:hover{background:var(--bg-5);}
+
+/* ── Members Panel ───────────────────────────────────────────── */
+.members-panel{
+  width:var(--mw);flex-shrink:0;background:var(--bg-1);
+  border-left:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;
+  transition:width .2s ease,opacity .2s ease;
+}
+.members-panel.closed{width:0;opacity:0;overflow:hidden;}
+.panel-hd{
+  padding:14px 14px 11px;display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg-1);z-index:5;
+}
+.panel-title{font-family:var(--fu);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--t-m);}
+.panel-close{color:var(--t-m);font-size:16px;padding:3px;border-radius:4px;transition:color .15s;}
+.panel-close:hover{color:var(--t-1);}
+.mem-grp-lbl{
+  padding:11px 14px 5px;font-size:10px;font-weight:700;font-family:var(--fu);
+  letter-spacing:.08em;text-transform:uppercase;color:var(--t-m);
+}
+.member-item{
+  display:flex;align-items:center;gap:8px;padding:6px 14px;
+  transition:background .1s;cursor:default;
+}
+.member-item:hover{background:rgba(255,255,255,.02);}
+.mem-av{
+  width:28px;height:28px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-weight:700;font-size:11px;font-family:var(--fu);color:white;position:relative;
+}
+.status-dot{
+  position:absolute;bottom:0;right:0;width:8px;height:8px;
+  border-radius:50%;border:2px solid var(--bg-1);
+}
+.s-on{background:var(--c-green);}
+.s-off{background:var(--t-m);}
+.mem-nm{font-size:12px;font-weight:500;font-family:var(--fu);color:var(--t-2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.role-badge{font-size:9px;font-family:var(--fm);padding:2px 6px;border-radius:4px;text-transform:uppercase;letter-spacing:.04em;}
+.role-owner{background:rgba(245,158,11,.13);color:var(--c-amber);}
+.role-admin{background:rgba(11,188,232,.1);color:var(--c-cyan);}
+.invite-box{
+  margin:10px;background:var(--bg-3);border:1px solid var(--border);
+  border-radius:10px;padding:12px;
+}
+.inv-lbl{font-size:10px;font-family:var(--fu);font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--t-m);margin-bottom:8px;}
+.inv-row{
+  display:flex;align-items:center;gap:7px;background:var(--bg-4);
+  border:1px solid var(--border-em);border-radius:6px;padding:8px 10px;
+}
+.inv-code{flex:1;font-family:var(--fm);font-size:12px;color:var(--c-cyan);letter-spacing:.1em;user-select:all;}
+.copy-btn{
+  font-size:11px;font-family:var(--fu);font-weight:600;color:var(--t-2);
+  padding:3px 8px;border-radius:4px;background:var(--bg-5);transition:all .15s;
+}
+.copy-btn:hover{background:var(--c-cyan-a);color:var(--c-cyan);}
+.room-info-box{margin:0 10px 10px;background:var(--bg-3);border:1px solid var(--border);border-radius:10px;padding:12px;}
+.ri-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:12px;}
+.ri-lbl{color:var(--t-m);font-family:var(--fu);}
+.ri-val{color:var(--t-2);font-family:var(--fm);font-size:11px;}
+.ri-badge{
+  font-family:var(--fm);font-size:9px;padding:2px 7px;border-radius:10px;
+  background:rgba(11,188,232,.1);color:var(--c-cyan);border:1px solid rgba(11,188,232,.2);
+}
+
+/* ══ MODALS ════════════════════════════════════════════════════ */
+.overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(8px);
+  display:flex;align-items:center;justify-content:center;z-index:200;padding:24px;
+}
+.modal{
+  background:var(--bg-2);border:1px solid var(--border-em);border-radius:14px;
+  padding:30px 32px;width:100%;max-width:420px;
+  box-shadow:0 24px 80px rgba(0,0,0,.65);animation:mi .18s ease-out;
+}
+@keyframes mi{from{opacity:0;transform:scale(.96) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.modal h3{font-family:var(--fu);font-size:18px;font-weight:700;color:var(--t-1);margin-bottom:22px;}
+.m-field{margin-bottom:14px;}
+.m-label{
+  display:block;font-size:10px;font-weight:700;font-family:var(--fu);
+  text-transform:uppercase;letter-spacing:.06em;color:var(--t-3);margin-bottom:6px;
+}
+.m-inp,.m-sel{
+  width:100%;background:var(--bg-3);border:1px solid var(--border-em);border-radius:8px;
+  padding:10px 14px;font-size:13px;color:var(--t-1);transition:border-color .15s;
+  direction:auto;
+}
+.m-inp:focus,.m-sel:focus{border-color:rgba(11,188,232,.5);}
+.m-inp::placeholder{color:var(--t-m);}
+.m-sel option{background:var(--bg-4);}
+.emoji-sel{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px;}
+.em-opt{
+  width:34px;height:34px;font-size:18px;border-radius:7px;
+  border:2px solid transparent;background:var(--bg-3);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  transition:background .1s,border-color .1s;
+}
+.em-opt:hover{background:var(--bg-4);}
+.em-opt.sel{border-color:var(--c-cyan);background:var(--c-cyan-a);}
+.modal-btns{display:flex;gap:10px;justify-content:flex-end;margin-top:22px;}
+.btn-sec{
+  padding:10px 20px;border-radius:8px;font-size:13px;font-weight:600;font-family:var(--fu);
+  background:var(--bg-3);color:var(--t-2);border:1px solid var(--border-em);transition:all .15s;
+}
+.btn-sec:hover{background:var(--bg-4);color:var(--t-1);}
+.btn-pri{
+  padding:10px 20px;border-radius:8px;font-size:13px;font-weight:600;font-family:var(--fu);
+  background:linear-gradient(135deg,var(--c-cyan),var(--c-violet));color:white;
+  transition:opacity .15s;
+}
+.btn-pri:hover{opacity:.9;}
+
+/* ══ TOAST ══════════════════════════════════════════════════════ */
+#toast{
+  position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:var(--bg-4);border:1px solid var(--border-em);border-radius:10px;
+  padding:11px 20px;font-size:13px;font-family:var(--fu);color:var(--t-1);
+  box-shadow:0 8px 32px rgba(0,0,0,.5);opacity:0;transition:opacity .2s,transform .2s;
+  pointer-events:none;z-index:999;white-space:nowrap;
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+#toast.ok{border-color:rgba(19,216,124,.3);}
+#toast.err{border-color:rgba(239,68,68,.3);}
+</style>
+</head>
+<body>
+
+<!-- ══ AUTH PAGE ══════════════════════════════════════════════════════════════ -->
+<div id="auth-page">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div class="auth-logo-icon">🔐</div>
+      <span class="auth-logo-name">NEXUS</span>
+    </div>
+    <p class="auth-tagline">المراسلة الآمنة من الجيل القادم · Next-Gen Secure Messaging</p>
+    <div class="auth-tabs">
+      <button class="a-tab on" id="tab-li" onclick="showTab('login')">تسجيل الدخول</button>
+      <button class="a-tab" id="tab-re" onclick="showTab('register')">حساب جديد</button>
+    </div>
+    <div id="form-login">
+      <div class="auth-fields">
+        <input class="a-inp" id="li-u" placeholder="اسم المستخدم" autocomplete="username" dir="ltr">
+        <input class="a-inp" id="li-p" type="password" placeholder="كلمة المرور" autocomplete="current-password" dir="ltr">
+      </div>
+      <button class="a-submit" onclick="doLogin()">دخول →</button>
+    </div>
+    <div id="form-reg" class="hidden">
+      <div class="auth-fields">
+        <input class="a-inp" id="re-u" placeholder="اسم المستخدم (3 أحرف+)" autocomplete="username" dir="ltr">
+        <input class="a-inp" id="re-p" type="password" placeholder="كلمة المرور (6 أحرف+)" autocomplete="new-password" dir="ltr">
+      </div>
+      <button class="a-submit" onclick="doRegister()">إنشاء الحساب →</button>
+    </div>
+    <div class="a-err" id="auth-err"></div>
+    <div class="a-badge">
+      <span>🔒</span>
+      <span>AES-128-CBC · Fernet Encryption · JWT Auth · SocketIO</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══ APP PAGE ═══════════════════════════════════════════════════════════════ -->
+<div id="app-page" style="display:none">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sb-hd">
+      <div class="brand">
+        <div class="brand-ico">🔐</div>
+        <span class="brand-nm">NEXUS</span>
+      </div>
+      <span class="sb-enc">ENCRYPTED</span>
+    </div>
+    <div class="sb-user">
+      <div class="u-av" id="my-av">U</div>
+      <span class="u-nm" id="my-nm">User</span>
+      <button class="sb-logout" onclick="doLogout()" title="تسجيل الخروج">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+          <polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+        </svg>
+      </button>
+    </div>
+    <div class="sb-search">
+      <div class="s-box">
+        <span class="search-ico">🔍</span>
+        <input placeholder="ابحث في الغرف..." oninput="filterRooms(this.value)">
+      </div>
+    </div>
+    <div class="rooms-list" id="rooms-list">
+      <div class="sec-lbl">
+        <span>الغرف والمجموعات</span>
+        <button class="lbl-btn" onclick="openCreate()" title="غرفة جديدة">+</button>
+      </div>
+    </div>
+    <div class="sb-foot">
+      <button class="sb-btn" onclick="openCreate()">
+        <span>✦</span><span>إنشاء غرفة جديدة</span>
+      </button>
+      <button class="sb-btn" onclick="openJoin()">
+        <span>🔗</span><span>الانضمام برمز دعوة</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN CHAT -->
+  <main class="chat-area">
+    <div class="no-room-scr" id="no-rm">
+      <div class="nr-icon">⬡</div>
+      <div class="nr-title">NEXUS Secure Chat</div>
+      <div class="nr-sub">اختر غرفة من الشريط الجانبي للبدء في المحادثة</div>
+    </div>
+    <div id="chat-view" class="hidden">
+      <header class="ch-hd">
+        <div class="ch-left">
+          <span class="ch-emoji" id="ch-em">🌐</span>
+          <div>
+            <div class="ch-nm" id="ch-nm">general</div>
+            <div class="ch-ds" id="ch-ds">...</div>
+          </div>
+        </div>
+        <div class="ch-right">
+          <div class="enc-chip">🔒 AES-128 Encrypted</div>
+          <button class="mem-chip" onclick="togglePanel()">
+            <span>👥</span><span id="mem-cnt">0</span>
+          </button>
+        </div>
+      </header>
+      <div class="msgs-scroll" id="msgs-scroll">
+        <div id="messages"></div>
+        <div id="typing-bar"></div>
+      </div>
+      <div class="input-area">
+        <div class="enc-strip"></div>
+        <div id="reply-preview" class="reply-preview hidden">
+          <span id="reply-text">...</span>
+          <button onclick="cancelReply()">✕</button>
+        </div>
+        <div class="input-box">
+          <button class="inp-btn" id="em-tog" onclick="toggleEmoji()" title="إيموجي">😊</button>
+          <textarea id="msg-input" placeholder="اكتب رسالة مشفرة..." rows="1" dir="auto"
+            onkeydown="handleKey(event)" oninput="handleInput(this)"></textarea>
+          <button class="send-btn" onclick="sendMsg()" title="إرسال (Enter)">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+            </svg>
+          </button>
+        </div>
+        <div class="emoji-picker hidden" id="em-picker"></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- MEMBERS PANEL -->
+  <aside class="members-panel" id="mpanel">
+    <div class="panel-hd">
+      <span class="panel-title">الأعضاء</span>
+      <button class="panel-close" onclick="togglePanel()">✕</button>
+    </div>
+    <div id="mlist"></div>
+    <div class="room-info-box" id="rinfo" style="display:none">
+      <div class="inv-lbl" style="margin-bottom:10px">معلومات الغرفة</div>
+      <div class="ri-row"><span class="ri-lbl">النوع</span><span class="ri-val ri-badge" id="ri-kind">—</span></div>
+      <div class="ri-row"><span class="ri-lbl">الأعضاء</span><span class="ri-val" id="ri-count">—</span></div>
+    </div>
+    <div class="invite-box" id="inv-box" style="display:none">
+      <div class="inv-lbl">رمز الدعوة</div>
+      <div class="inv-row">
+        <span class="inv-code" id="inv-code">—</span>
+        <button class="copy-btn" onclick="copyCode()">نسخ</button>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<!-- ══ MODALS ══════════════════════════════════════════════════════════════════ -->
+<div class="overlay hidden" id="ov-create">
+  <div class="modal">
+    <h3>✨ إنشاء غرفة جديدة</h3>
+    <div class="m-field">
+      <label class="m-label">اسم الغرفة *</label>
+      <input class="m-inp" id="new-nm" placeholder="مثال: general · design · random" dir="ltr">
+    </div>
+    <div class="m-field">
+      <label class="m-label">الوصف</label>
+      <input class="m-inp" id="new-ds" placeholder="وصف قصير للغرفة..." dir="auto">
+    </div>
+    <div class="m-field">
+      <label class="m-label">الأيقونة</label>
+      <div class="emoji-sel" id="em-sel"></div>
+    </div>
+    <div class="m-field">
+      <label class="m-label">نوع الغرفة</label>
+      <select class="m-sel" id="new-kd">
+        <option value="public">🌐 عامة — كل الأعضاء ينضمون تلقائياً</option>
+        <option value="private">🔒 خاصة — بدعوة فقط</option>
+        <option value="group">👥 مجموعة — للفرق والمشاريع</option>
+      </select>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-sec" onclick="closeModals()">إلغاء</button>
+      <button class="btn-pri" onclick="doCreate()">إنشاء الغرفة ✦</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay hidden" id="ov-join">
+  <div class="modal">
+    <h3>🔗 الانضمام برمز دعوة</h3>
+    <div class="m-field">
+      <label class="m-label">رمز الدعوة</label>
+      <input class="m-inp" id="join-cd" placeholder="أدخل الرمز هنا..." dir="ltr" style="letter-spacing:.1em;text-transform:uppercase;">
+    </div>
+    <div class="modal-btns">
+      <button class="btn-sec" onclick="closeModals()">إلغاء</button>
+      <button class="btn-pri" onclick="doJoin()">انضمام →</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<script>
+/* ═══════════════════════════════════════════════════════════════════════════
+   NEXUS Chat — Frontend Engine
+═══════════════════════════════════════════════════════════════════════════ */
+
+const API = window.location.origin;
+
+/* ── State ──────────────────────────────────────────────────────────────── */
+let token    = localStorage.getItem('nx_tok');
+let me       = JSON.parse(localStorage.getItem('nx_me') || 'null');
+let socket   = null;
+let roomId   = null;
+let rooms    = {};
+let typers   = {};
+let typeTmr  = null;
+let isTyping = false;
+let panelOpen = true;
+let selEmoji  = '🌐';
+let replyTo   = null;
+let lastUid   = null;
+let lastTs    = null;
+
+/* ── Constants ──────────────────────────────────────────────────────────── */
+const ROOM_EMOJIS = ['🌐','⚡','🔒','📡','💬','🎯','🚀','💻','🧠','🎮',
+                     '🎵','📚','🏆','🔬','🌙','🔥','💎','⚙️','📊','🌈',
+                     '🎨','🛡️','⚔️','🌿'];
+const MSG_EMOJIS  = ['😊','😂','❤️','👍','🎉','😍','🤔','😎','🔥','💯',
+                     '👏','😭','🙏','✨','🥹','💪','🤣','😅','🫡','🤝'];
+const CIPHER_AB   = '01ABCDEFGHIJKLMNPQRSTUVWXYZabcdefghi!@#$%^αβγδεζη';
+
+/* ── DOM ────────────────────────────────────────────────────────────────── */
+const $ = id => document.getElementById(id);
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+/* ── Toast ──────────────────────────────────────────────────────────────── */
+function toast(msg, type = '') {
+  const el = $('toast');
+  el.textContent = msg;
+  el.className = type ? `show ${type}` : 'show';
+  clearTimeout(el._t);
+  el._t = setTimeout(() => { el.className = ''; }, 3200);
+}
+
+/* ── Time ───────────────────────────────────────────────────────────────── */
+function relTime(iso) {
+  const diff = Math.floor((Date.now() - new Date(iso)) / 1000);
+  if (diff < 5)    return 'الآن';
+  if (diff < 60)   return `${diff}ث`;
+  if (diff < 3600) return `${Math.floor(diff/60)}د`;
+  if (diff < 86400)return `${Math.floor(diff/3600)}س`;
+  const d = new Date(iso);
+  return `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear().toString().slice(-2)}`;
+}
+
+function fmtDate(iso) {
+  const d = new Date(iso);
+  const today = new Date();
+  if (d.toDateString() === today.toDateString()) return 'اليوم';
+  const yest = new Date(today); yest.setDate(today.getDate()-1);
+  if (d.toDateString() === yest.toDateString()) return 'أمس';
+  return d.toLocaleDateString('ar-SA', {day:'numeric',month:'long'});
+}
+
+function initials(name) { return (name||'?')[0].toUpperCase(); }
+
+/* ── Cipher scan (signature animation) ─────────────────────────────────── */
+async function cipherScan(elements, fast = false) {
+  const FRAMES = fast ? 4 : 10;
+  for (const el of elements) {
+    const target = el.dataset.clear || el.textContent;
+    el.dataset.clear = target;
+    if (!target.trim() || target.length > 200) { el.textContent = target; continue; }
+    let f = 0;
+    await new Promise(res => {
+      const iv = setInterval(() => {
+        const p = f / FRAMES;
+        el.textContent = [...target].map((c,i) => {
+          if (/[\s\u0600-\u06FF]/.test(c)) return c;
+          if (i / target.length < p) return c;
+          return CIPHER_AB[Math.floor(Math.random() * CIPHER_AB.length)];
+        }).join('');
+        f++;
+        if (f > FRAMES) { el.textContent = target; clearInterval(iv); res(); }
+      }, fast ? 18 : 28);
+    });
+    await sleep(10);
+  }
+}
+
+/* ── API Helper ─────────────────────────────────────────────────────────── */
+async function api(path, opts = {}) {
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = 'Bearer ' + token;
+  const res  = await fetch(API + path, { headers, ...opts, body: opts.body ? JSON.stringify(opts.body) : undefined });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'خطأ في الطلب');
+  return data;
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   AUTH
+════════════════════════════════════════════════════════════════════════ */
+function showTab(tab) {
+  $('form-login').classList.toggle('hidden', tab !== 'login');
+  $('form-reg').classList.toggle('hidden', tab !== 'register');
+  $('tab-li').classList.toggle('on', tab === 'login');
+  $('tab-re').classList.toggle('on', tab === 'register');
+  $('auth-err').style.display = 'none';
+}
+function showErr(msg) { const e=$('auth-err'); e.textContent=msg; e.style.display='flex'; }
+
+async function doLogin() {
+  const username=$('li-u').value.trim(), password=$('li-p').value;
+  if (!username||!password) return;
+  try {
+    const r = await api('/api/login',{method:'POST',body:{username,password}});
+    saveAuth(r.token, r.user); await bootApp();
+  } catch(e) { showErr(e.message); }
+}
+
+async function doRegister() {
+  const username=$('re-u').value.trim(), password=$('re-p').value;
+  if (!username||!password) return;
+  try {
+    const r = await api('/api/register',{method:'POST',body:{username,password}});
+    saveAuth(r.token, r.user); await bootApp();
+  } catch(e) { showErr(e.message); }
+}
+
+function saveAuth(tok, user) {
+  token=tok; me=user;
+  localStorage.setItem('nx_tok',tok);
+  localStorage.setItem('nx_me',JSON.stringify(user));
+}
+
+function doLogout() {
+  if (socket) socket.disconnect();
+  localStorage.removeItem('nx_tok'); localStorage.removeItem('nx_me');
+  token=null; me=null; roomId=null; rooms={};
+  $('app-page').style.display='none';
+  $('auth-page').style.display='flex';
+  $('rooms-list').innerHTML='<div class="sec-lbl"><span>الغرف والمجموعات</span><button class="lbl-btn" onclick="openCreate()">+</button></div>';
+  $('messages').innerHTML=''; $('no-rm').style.display='flex';
+  $('chat-view').classList.add('hidden');
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   BOOT
+════════════════════════════════════════════════════════════════════════ */
+async function bootApp() {
+  $('auth-page').style.display='none';
+  $('app-page').style.display='flex';
+
+  $('my-nm').textContent = me.username;
+  const av=$('my-av');
+  av.textContent = initials(me.username);
+  av.style.background = me.color||'#0BBCE8';
+
+  buildEmojiPickers();
+  await loadRooms();
+  connectSocket();
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   ROOMS
+════════════════════════════════════════════════════════════════════════ */
+async function loadRooms() {
+  try {
+    const list = await api('/api/rooms');
+    rooms={};
+    list.forEach(r => { rooms[r.id]=r; });
+    renderRooms();
+  } catch(e) { toast('فشل تحميل الغرف: '+e.message,'err'); }
+}
+
+function renderRooms(filter='') {
+  const c=$('rooms-list');
+  c.innerHTML=`<div class="sec-lbl"><span>الغرف والمجموعات</span><button class="lbl-btn" onclick="openCreate()">+</button></div>`;
+  const list = Object.values(rooms).filter(r=>!filter||r.name.toLowerCase().includes(filter.toLowerCase()));
+  if (!list.length) { c.innerHTML+=`<div style="padding:14px;color:var(--t-m);font-size:12px;text-align:center">لا توجد نتائج</div>`; return; }
+  list.forEach(r => {
+    const d = document.createElement('div');
+    d.className = 'room-item'+(r.id===roomId?' on':'');
+    d.dataset.id = r.id;
+    const lock = r.kind!=='public'?`<span class="r-lock">🔒</span>`:'';
+    d.innerHTML=`
+      <span class="r-ico">${r.emoji||'#'}</span>
+      <div class="r-meta">
+        <div class="r-nm">${escH(r.name)}</div>
+        ${r.preview?`<div class="r-prev">${escH(r.preview.substring(0,45))}</div>`:''}
+      </div>${lock}`;
+    d.onclick=()=>switchRoom(r.id);
+    c.appendChild(d);
+  });
+}
+
+function filterRooms(q) { renderRooms(q); }
+
+async function switchRoom(id) {
+  if (id===roomId) return;
+  if (roomId && socket) socket.emit('part',{rid:roomId});
+  roomId=id;
+  lastUid=null; lastTs=null;
+  document.querySelectorAll('.room-item').forEach(el=>el.classList.toggle('on',el.dataset.id===id));
+  $('no-rm').style.display='none';
+  const cv=$('chat-view');
+  cv.classList.remove('hidden'); cv.style.display='flex';
+  const room=rooms[id];
+  if (room) {
+    $('ch-em').textContent = room.emoji||'#';
+    $('ch-nm').textContent = room.name;
+    $('ch-ds').textContent = room.description||'لا يوجد وصف';
+    $('inv-code').textContent = room.code||'—';
+    $('ri-kind').textContent = {public:'🌐 عامة',private:'🔒 خاصة',group:'👥 مجموعة'}[room.kind]||room.kind;
+    $('rinfo').style.display='block'; $('inv-box').style.display='block';
+  }
+  $('messages').innerHTML='';
+  cancelReply();
+  if (socket) socket.emit('join',{rid:id});
+  await Promise.all([loadMessages(id), loadMembers(id)]);
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   MESSAGES
+════════════════════════════════════════════════════════════════════════ */
+async function loadMessages(rid) {
+  try {
+    const msgs = await api(`/api/rooms/${rid}/messages`);
+    const el=$('messages');
+    el.innerHTML='';
+    lastUid=null; lastTs=null;
+    if (!msgs.length) {
+      el.innerHTML=`<div style="padding:50px 20px;text-align:center;color:var(--t-m);font-size:13px;direction:rtl">كن أول من يرسل رسالة في هذه الغرفة 👋</div>`;
+      return;
+    }
+    let lastDate='';
+    msgs.forEach(m => {
+      const d = new Date(m.created_at);
+      const dstr = d.toDateString();
+      if (dstr!==lastDate) {
+        const div=document.createElement('div');
+        div.className='date-div'; div.textContent=fmtDate(m.created_at);
+        el.appendChild(div); lastDate=dstr;
+      }
+      el.appendChild(buildMsg(m));
+    });
+    scrollBottom();
+    // cipher scan on last 15 messages
+    const txts = Array.from(el.querySelectorAll('.m-txt')).slice(-15);
+    cipherScan(txts);
+  } catch(e) { toast('فشل تحميل الرسائل','err'); }
+}
+
+function buildMsg(msg, isNew=false) {
+  const now  = new Date(msg.created_at);
+  const u    = msg.user||{};
+  const uid  = u.id;
+  const color= u.color||'#0BBCE8';
+  const uname= u.username||'مجهول';
+  const FIVE = 5*60*1000;
+  const isCont = (uid===lastUid) && lastTs && (now-lastTs<FIVE);
+  lastUid=uid; lastTs=now;
+
+  const wrap=document.createElement('div');
+  wrap.className='msg-group '+(isCont?'cont':'has-hd')+(isNew?' msg-new':'');
+  wrap.dataset.msgId=msg.id;
+
+  const replyHtml = msg.reply_to ? `<div class="m-reply-ref" onclick="scrollToMsg('${msg.reply_to}')">↩ جواب على رسالة سابقة</div>` : '';
+
+  wrap.innerHTML=`
+    <div class="m-av" style="background:${color}">${initials(uname)}</div>
+    <div class="m-body">
+      <div class="m-hd">
+        <span class="m-un" style="color:${color}">${escH(uname)}</span>
+        <span class="m-ts">${relTime(msg.created_at)}</span>
+      </div>
+      ${replyHtml}
+      <div class="m-txt" data-clear="${escA(msg.text)}">${escH(msg.text)}</div>
+      <div class="m-enc">🔒 aes-128-cbc · fernet</div>
+    </div>
+    <div class="msg-actions">
+      <button class="msg-act-btn" onclick="setReply('${msg.id}','${escA(msg.text.substring(0,60))}')" title="رد">↩</button>
+    </div>`;
+  return wrap;
+}
+
+function appendMsg(msg) {
+  const el=$('messages');
+  const empty=el.querySelector('[style*="text-align:center"]');
+  if (empty) empty.remove();
+  el.appendChild(buildMsg(msg,true));
+  scrollBottom();
+}
+
+function scrollBottom() {
+  const s=$('msgs-scroll');
+  requestAnimationFrame(()=>{ s.scrollTop=s.scrollHeight; });
+}
+
+function scrollToMsg(id) {
+  const el=document.querySelector(`[data-msg-id="${id}"]`);
+  if (el) { el.scrollIntoView({behavior:'smooth',block:'center'}); el.style.background='rgba(11,188,232,.06)'; setTimeout(()=>el.style.background='',1500); }
+}
+
+/* ── Reply ──────────────────────────────────────────────────────────────── */
+function setReply(id, preview) {
+  replyTo=id;
+  $('reply-text').textContent='↩ '+preview;
+  $('reply-preview').classList.remove('hidden');
+  $('msg-input').focus();
+}
+function cancelReply() { replyTo=null; $('reply-preview').classList.add('hidden'); }
+
+/* ── Send ───────────────────────────────────────────────────────────────── */
+function handleKey(e) {
+  if (e.key==='Enter'&&!e.shiftKey) { e.preventDefault(); sendMsg(); }
+}
+function handleInput(el) {
+  el.style.height='auto';
+  el.style.height=Math.min(el.scrollHeight,120)+'px';
+  emitTyping(true);
+  clearTimeout(typeTmr);
+  typeTmr=setTimeout(()=>emitTyping(false),2000);
+}
+function emitTyping(on) {
+  if (!socket||!roomId||on===isTyping) return;
+  isTyping=on;
+  socket.emit('typing',{rid:roomId,on});
+}
+function sendMsg() {
+  const inp=$('msg-input');
+  const text=inp.value.trim();
+  if (!text||!socket||!roomId) return;
+  socket.emit('msg',{rid:roomId,text,reply_to:replyTo||undefined});
+  inp.value=''; inp.style.height='auto';
+  emitTyping(false); cancelReply();
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   MEMBERS
+════════════════════════════════════════════════════════════════════════ */
+async function loadMembers(rid) {
+  try {
+    const list=await api(`/api/rooms/${rid}/members`);
+    renderMembers(list);
+    $('mem-cnt').textContent=list.length;
+    $('ri-count').textContent=list.length+' عضو';
+  } catch {}
+}
+
+function renderMembers(list) {
+  const el=$('mlist');
+  const on=list.filter(u=>u.status==='online');
+  const off=list.filter(u=>u.status!=='online');
+  el.innerHTML='';
+  if (on.length) { el.innerHTML+=`<div class="mem-grp-lbl">متصل الآن · ${on.length}</div>`; on.forEach(u=>el.appendChild(buildMemEl(u))); }
+  if (off.length) { el.innerHTML+=`<div class="mem-grp-lbl">غير متصل · ${off.length}</div>`; off.forEach(u=>el.appendChild(buildMemEl(u))); }
+}
+
+function buildMemEl(u) {
+  const d=document.createElement('div');
+  d.className='member-item'; d.dataset.uid=u.id;
+  const badge = u.role==='owner'?'<span class="role-badge role-owner">مالك</span>':
+                u.role==='admin'?'<span class="role-badge role-admin">مشرف</span>':'';
+  d.innerHTML=`
+    <div class="mem-av" style="background:${u.color||'#0BBCE8'}">
+      ${initials(u.username)}
+      <span class="status-dot ${u.status==='online'?'s-on':'s-off'}"></span>
+    </div>
+    <span class="mem-nm">${escH(u.username)}</span>${badge}`;
+  return d;
+}
+
+function updatePresence(uid, online) {
+  const el=document.querySelector(`.member-item[data-uid="${uid}"]`);
+  if (el) {
+    const dot=el.querySelector('.status-dot');
+    if (dot) { dot.className='status-dot '+(online?'s-on':'s-off'); }
+  }
+}
+
+/* ── Typing bar ─────────────────────────────────────────────────────────── */
+function renderTyping() {
+  const names=Object.values(typers);
+  const bar=$('typing-bar');
+  if (!names.length) { bar.innerHTML=''; return; }
+  const lbl=names.length===1?`${names[0]} يكتب...`:
+            names.length===2?`${names[0]} و ${names[1]} يكتبان...`:
+            `${names.length} أشخاص يكتبون...`;
+  bar.innerHTML=`<div class="t-dots"><div class="t-dot"></div><div class="t-dot"></div><div class="t-dot"></div></div><span>${lbl}</span>`;
+  scrollBottom();
+}
+
+/* ── Panel ──────────────────────────────────────────────────────────────── */
+function togglePanel() {
+  panelOpen=!panelOpen;
+  $('mpanel').classList.toggle('closed',!panelOpen);
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   SOCKET.IO
+════════════════════════════════════════════════════════════════════════ */
+function connectSocket() {
+  socket=io(API,{transports:['websocket','polling']});
+
+  socket.on('connect',()=>{ socket.emit('auth',{token}); });
+
+  socket.on('ready',()=>{
+    if (roomId) socket.emit('join',{rid:roomId});
+  });
+
+  socket.on('msg', msg => {
+    if (msg.room_id===roomId) appendMsg(msg);
+    if (rooms[msg.room_id]) {
+      rooms[msg.room_id].preview=msg.text;
+      renderRooms($('.s-box input')?document.querySelector('.s-box input').value:'');
+    }
+  });
+
+  socket.on('typing', data => {
+    if (data.rid!==roomId) return;
+    if (data.on) typers[data.uid]=data.name;
+    else delete typers[data.uid];
+    renderTyping();
+  });
+
+  socket.on('presence', data => {
+    if (data.uid) updatePresence(data.uid, data.online);
+  });
+
+  socket.on('disconnect', ()=>toast('⚠ انقطع الاتصال...','err'));
+  socket.on('reconnect',  ()=>{ toast('✓ تم الاتصال مجدداً','ok'); socket.emit('auth',{token}); });
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   CREATE / JOIN
+════════════════════════════════════════════════════════════════════════ */
+function openCreate() {
+  $('ov-create').classList.remove('hidden');
+  $('new-nm').value=''; $('new-ds').value=''; selEmoji='🌐';
+  document.querySelectorAll('.em-opt').forEach((b,i)=>b.classList.toggle('sel',ROOM_EMOJIS[i]===selEmoji));
+  $('new-nm').focus();
+}
+
+async function doCreate() {
+  const name=$('new-nm').value.trim();
+  const desc=$('new-ds').value.trim();
+  const kind=$('new-kd').value;
+  if (!name) { toast('الاسم مطلوب','err'); return; }
+  try {
+    const room=await api('/api/rooms',{method:'POST',body:{name,description:desc,kind,emoji:selEmoji}});
+    rooms[room.id]={...room,members:1};
+    renderRooms(); closeModals(); switchRoom(room.id);
+    toast('✓ تم إنشاء الغرفة','ok');
+  } catch(e) { toast(e.message,'err'); }
+}
+
+function openJoin() {
+  $('ov-join').classList.remove('hidden');
+  $('join-cd').value=''; $('join-cd').focus();
+}
+
+async function doJoin() {
+  const code=$('join-cd').value.trim().toUpperCase();
+  if (!code) return;
+  try {
+    const res=await api('/api/rooms/join',{method:'POST',body:{code}});
+    const room=res.room;
+    rooms[room.id]={...room,members:1};
+    renderRooms(); closeModals(); switchRoom(room.id);
+    toast('✓ تم الانضمام للغرفة','ok');
+  } catch(e) { toast(e.message,'err'); }
+}
+
+function closeModals() {
+  $('ov-create').classList.add('hidden');
+  $('ov-join').classList.add('hidden');
+}
+
+document.querySelectorAll('.overlay').forEach(ov=>ov.addEventListener('click',e=>{if(e.target===ov)closeModals();}));
+
+/* ── Copy code ──────────────────────────────────────────────────────────── */
+function copyCode() {
+  navigator.clipboard.writeText($('inv-code').textContent)
+    .then(()=>toast('✓ تم نسخ رمز الدعوة','ok'))
+    .catch(()=>toast('تعذر النسخ','err'));
+}
+
+/* ── Emoji pickers ──────────────────────────────────────────────────────── */
+function buildEmojiPickers() {
+  // Modal room emoji selector
+  const sel=$('em-sel');
+  sel.innerHTML='';
+  ROOM_EMOJIS.forEach(em=>{
+    const b=document.createElement('button');
+    b.type='button'; b.className='em-opt'+(em===selEmoji?' sel':''); b.textContent=em;
+    b.onclick=()=>{ selEmoji=em; document.querySelectorAll('.em-opt').forEach(x=>x.classList.remove('sel')); b.classList.add('sel'); };
+    sel.appendChild(b);
+  });
+  // Input emoji picker
+  const picker=$('em-picker');
+  picker.innerHTML='';
+  MSG_EMOJIS.forEach(em=>{
+    const b=document.createElement('button');
+    b.type='button'; b.textContent=em;
+    b.onclick=()=>{ $('msg-input').value+=em; $('msg-input').focus(); $('em-picker').classList.add('hidden'); };
+    picker.appendChild(b);
+  });
+}
+
+function toggleEmoji() { $('em-picker').classList.toggle('hidden'); }
+document.addEventListener('click',e=>{
+  const tog=$('em-tog'), pk=$('em-picker');
+  if (pk&&tog&&!tog.contains(e.target)&&!pk.contains(e.target)) pk.classList.add('hidden');
+});
+
+/* ── HTML escape ────────────────────────────────────────────────────────── */
+function escH(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function escA(s) { return escH(s).replace(/'/g,'&#39;'); }
+
+/* ── Keyboard shortcuts ─────────────────────────────────────────────────── */
+$('li-p').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+$('re-p').addEventListener('keydown',e=>{if(e.key==='Enter')doRegister();});
+$('join-cd').addEventListener('keydown',e=>{if(e.key==='Enter')doJoin();});
+$('new-nm').addEventListener('keydown',e=>{if(e.key==='Enter')doCreate();});
+
+document.addEventListener('keydown',e=>{
+  if (e.key==='Escape') closeModals();
+  if ((e.ctrlKey||e.metaKey)&&e.key==='k') { e.preventDefault(); document.querySelector('.s-box input').focus(); }
+});
+
+/* ── Init ───────────────────────────────────────────────────────────────── */
+(async function init() {
+  if (token && me) {
+    try { await bootApp(); }
+    catch { doLogout(); }
+  }
+})();
+</script>
+</body>
+</html>
