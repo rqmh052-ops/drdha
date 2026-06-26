@@ -1,35 +1,84 @@
-# NEXUS Chat — تطبيق مراسلة شبيه بتيليجرام
+# NEXUS Chat v2 🔐
 
-## 🚀 التشغيل المحلي
+تطبيق مراسلة فوري آمن ومشفّر — Flask + Socket.IO + PWA
+
+---
+
+## 🚀 النشر على Railway
+
+### 1. رفع الكود على GitHub
+
+```bash
+git init
+git add .
+git commit -m "NEXUS Chat v2"
+git remote add origin https://github.com/YOUR_USER/nexus-chat.git
+git push -u origin main
 ```
+
+### 2. إنشاء مشروع على Railway
+
+1. اذهب إلى [railway.app](https://railway.app) وسجّل الدخول
+2. اضغط **New Project** → **Deploy from GitHub repo**
+3. اختر الـ repo
+
+### 3. متغيّرات البيئة (مهم!)
+
+في Railway، اذهب إلى **Variables** وأضف:
+
+| Variable | القيمة |
+|---|---|
+| `SECRET_KEY` | سلسلة عشوائية طويلة |
+| `JWT_SECRET` | سلسلة عشوائية مختلفة |
+| `FERNET_KEY` | ناتج `python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"` |
+| `PORT` | Railway يضيفها تلقائيًا |
+
+> ⚠️ بدون `FERNET_KEY` سيُولَّد مفتاح جديد عند كل إعادة نشر، مما يجعل الرسائل القديمة غير قابلة للفكّ. أضفها كـ secret.
+
+### 4. قاعدة البيانات (اختياري)
+
+لحفظ البيانات بشكل دائم على Railway:
+- اضغط **New** → **Database** → **PostgreSQL**
+- Railway ستضيف `DATABASE_URL` تلقائيًا للتطبيق
+- التطبيق يتعرّف عليها تلقائيًا
+
+بدون PostgreSQL: التطبيق يستخدم SQLite داخل الحاوية (البيانات تُمسح عند إعادة النشر — مقبول حسب متطلباتك)
+
+---
+
+## 🔧 التشغيل المحلي
+
+```bash
 pip install -r requirements.txt
 python app.py
 ```
-بعد التشغيل، افتح المتصفح على: `http://localhost:5000`
 
-## 📂 الملفات
-- `app.py` — الباك إند (Flask + Socket.IO + SQLite)، يحتوي:
-  - تسجيل/دخول (JWT + Bcrypt)
-  - محادثات خاصة (DM) بين مستخدمين
-  - مجموعات وقنوات عامة برمز دعوة
-  - رسائل نص / صور / تسجيلات صوتية (مشفّرة بـ Fernet داخل القاعدة)
-  - حضور Online/Offline + مؤشر الكتابة الآن
-- `index.html` — الواجهة الكاملة (HTML+CSS+JS بملف واحد)، تصميم داكن شبيه بتيليجرام،
-  تبويبين (كل المحادثات / خاصة)، قائمة جانبية، إنشاء مجموعات/قنوات، إرسال صوت وصور،
-  ومنع كامل للتكبير/التصغير (pinch-zoom + double-tap zoom).
-- `manifest.json` + `sw.js` — يجعلان التطبيق "PWA" جاهزًا للتغليف.
+افتح: http://localhost:5000
 
-## 📱 تحويله إلى تطبيق (APK) لاحقًا
-الموقع جاهز كـ PWA، فيمكنك استخدام أي من:
-1. **PWABuilder** (pwabuilder.com) — ترفع رابط الموقع المنشور ويولّد لك APK/AAB جاهز لجوجل بلاي.
-2. **Bubblewrap (Google TWA)** — أداة سطر أوامر رسمية من جوجل لتحويل PWA إلى Trusted Web Activity.
-3. أدوات "Website to APK" الجاهزة — تحتاج فقط الرابط بعد رفع المشروع على سيرفر (مع HTTPS).
+---
 
-⚠️ **مهم قبل التحويل:** يجب نشر السيرفر (app.py) على دومين حقيقي بـ HTTPS (مثل Render أو Railway أو VPS)
-لأن WebSocket والمايكروفون (تسجيل الصوت) لا يعملان على HTTP عادي في أغلب المتصفحات/الأنظمة، إضافة الى أن أي
-تطبيق APK يحتاج رابط فعلي وليس localhost.
+## ✨ المميزات
 
-## 🔒 ملاحظات أمان
-- غيّر القيم الافتراضية `SECRET_KEY` و `JWT_SECRET` في متغيرات البيئة قبل النشر الفعلي.
-- ملف `.nexus.key` (مفتاح Fernet) يُنشأ تلقائيًا — احتفظ بنسخة منه، لأن فقدانه يعني تعذّر قراءة الرسائل القديمة.
-- الحد الأقصى للصور/الأصوات في الإعدادات الحالية 6-8MB لكل رسالة.
+- 🔐 تشفير رسائل Fernet (AES-128)
+- 💬 محادثات خاصة (DM)
+- 👥 مجموعات وقنوات
+- 🎤 رسائل صوتية
+- 📷 إرسال صور
+- ⚡ تحديثات فورية عبر Socket.IO
+- 📱 PWA — قابل للتثبيت كتطبيق
+
+---
+
+## 📁 هيكل المشروع
+
+```
+nexus-chat/
+├── app.py            # الخادم (Flask + SocketIO)
+├── index.html        # الواجهة (SPA)
+├── manifest.json     # PWA manifest
+├── sw.js             # Service Worker
+├── requirements.txt  # Python dependencies
+├── Procfile          # للنشر
+├── railway.json      # إعدادات Railway
+└── .gitignore
+```
